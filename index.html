@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEP Word Problem Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .problem-card {
+            page-break-inside: avoid;
+        }
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+            }
+            .no-print {
+                display: none;
+            }
+            .problem-card, .vertical-problem-card {
+                box-shadow: none;
+                border: 1px solid #e2e8f0; /* light gray border */
+            }
+            #answers-container {
+                page-break-before: always; /* Start answers on a new page */
+            }
+             .container {
+                max-width: 100%;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        <header class="text-center mb-8 no-print">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600">IEP Word Problem Generator</h1>
+            <p class="text-gray-600 mt-2">Create customized math word problems for your students.</p>
+        </header>
+
+        <!-- Configuration Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- IEP Goal Selection -->
+                <div>
+                    <label for="iepGoal" class="block text-sm font-medium text-gray-700 mb-1">Select IEP Goal</label>
+                    <select id="iepGoal" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="multiply_two_by_one">2-Digit by 1-Digit Multiplication</option>
+                        <option value="multiply_two_by_two">2-Digit by 2-Digit Multiplication</option>
+                        <option value="one_step_mixed">1-Step Word Problems (Mixed Ops)</option>
+                        <option value="two_step_mixed">2-Step Word Problems (Mixed Ops)</option>
+                    </select>
+                </div>
+                <!-- Number of Problems -->
+                <div>
+                    <label for="numProblems" class="block text-sm font-medium text-gray-700 mb-1">Number of Problems</label>
+                    <input type="number" id="numProblems" value="10" min="1" max="50" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <!-- Generate Button -->
+                <div class="md:self-end">
+                    <button id="generateBtn" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Generate Problems
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problems and Answers Output -->
+        <div id="output" class="space-y-6">
+            <!-- Problems will be injected here -->
+            <div id="problems-container"></div>
+
+            <!-- Answer Key Section -->
+            <div id="answers-container" class="hidden">
+                 <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-700">Answer Key</h2>
+                    <button onclick="window.print()" class="flex items-center bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition duration-150 no-print">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16">
+                          <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm5 8H6a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                          <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                        </svg>
+                        Print
+                    </button>
+                </div>
+                <div id="answers-list" class="bg-white p-6 rounded-lg shadow-md"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div id="action-buttons" class="text-center mt-8 hidden no-print">
+                <button id="toggleAnswersBtn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                    Show Answers
+                </button>
+            </div>
+        </div>
+         <!-- Message Box -->
+        <div id="message-box" class="hidden fixed top-5 right-5 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-xl no-print" role="alert">
+            <strong class="font-bold">Heads up!</strong>
+            <span class="block sm:inline" id="message-text">Something went wrong.</span>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const problemsContainer = document.getElementById('problems-container');
+        const answersContainer = document.getElementById('answers-container');
+        const answersList = document.getElementById('answers-list');
+        const actionButtons = document.getElementById('action-buttons');
+        const toggleAnswersBtn = document.getElementById('toggleAnswersBtn');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+
+        // Data for generating varied problems
+        const names = ["Alex", "Ben", "Maria", "Sam", "Leo", "Mia", "Zoe", "Tom", "Ava", "Chloe"];
+        const items = ["cookies", "apples", "pencils", "stickers", "marbles", "books", "crayons", "toys", "cupcakes", "stickers"];
+        const places = ["park", "store", "library", "school", "beach", "zoo"];
+        const actions = [
+            { past: "found", present: "finds" },
+            { past: "saw", present: "sees" },
+            { past: "picked", present: "picks" },
+            { past: "bought", present: "buys" },
+            { past: "ate", present: "eats" },
+            { past: "gave away", present: "gives away" }
+        ];
+
+        // --- Utility Functions ---
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+        const showMessage = (message) => {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000);
+        };
+
+
+        // --- Problem Generation Logic ---
+        function generateProblem(goal) {
+            let problem = "";
+            let answer = 0;
+            const name1 = getRandomElement(names);
+            let name2 = getRandomElement(names.filter(n => n !== name1));
+            const item = getRandomElement(items);
+            const action = getRandomElement(actions);
+
+            switch (goal) {
+                case 'one_step_mixed': {
+                    const operations = ['add', 'subtract', 'multiply', 'divide'];
+                    const selectedOp = getRandomElement(operations);
+
+                    if (selectedOp === 'add') {
+                        const num1 = getRandomInt(20, 100);
+                        const num2 = getRandomInt(20, 100);
+                        answer = num1 + num2;
+                        problem = `${name1} counted ${num1} birds in a tree. ${name2} counted ${num2} birds in another tree. How many birds did they count altogether?`;
+                    } else if (selectedOp === 'subtract') {
+                        const num1 = getRandomInt(50, 150);
+                        const num2 = getRandomInt(10, num1 - 10);
+                        answer = num1 - num2;
+                        problem = `There were ${num1} people at the ${getRandomElement(places)}. ${num2} people left. How many people are still at the ${getRandomElement(places)}?`;
+                    } else if (selectedOp === 'multiply') {
+                        const num1 = getRandomInt(10, 40);
+                        const num2 = getRandomInt(2, 9);
+                        answer = num1 * num2;
+                        problem = `${name1} has ${num2} photo albums. Each album has ${num1} photos. How many photos does ${name1} have in total?`;
+    
+                    } else { // divide
+                        const divisor = getRandomInt(2, 9);
+                        const quotient = getRandomInt(5, 15);
+                        const dividend = divisor * quotient;
+                        answer = quotient;
+                        problem = `${name1} has ${dividend} ${item}. They want to put them into ${divisor} boxes with an equal amount in each box. How many ${item} will be in each box?`;
+                    }
+                    break;
+                }
+                case 'two_step_mixed': {
+                    const scenarios = ['add_subtract', 'multiply_add', 'multiply_subtract', 'divide_add', 'divide_subtract'];
+                    const selectedScenario = getRandomElement(scenarios);
+
+                    if (selectedScenario === 'add_subtract') {
+                        const num1 = getRandomInt(25, 50);
+                        const num2 = getRandomInt(10, 30);
+                        const num3 = getRandomInt(5, num1 + num2 - 5);
+                        answer = (num1 + num2) - num3;
+                        problem = `${name1} had ${num1} ${item}. They received ${num2} more ${item} for their birthday. Then, they gave ${num3} ${item} to ${name2}. How many ${item} does ${name1} have now?`;
+                    } else if (selectedScenario === 'multiply_add') {
+                        const num1 = getRandomInt(3, 8); 
+                        const num2 = getRandomInt(5, 12); 
+                        const num3 = getRandomInt(10, 50); 
+                        answer = (num1 * num2) + num3;
+                        problem = `${name1} bought ${num1} boxes of ${item}. Each box contained ${num2} ${item}. They already had ${num3} ${item} at home. How many ${item} does ${name1} have in total?`;
+                    } else if (selectedScenario === 'multiply_subtract') {
+                        const num1 = getRandomInt(5, 10); 
+                        const num2 = getRandomInt(8, 15); 
+                        const num3 = getRandomInt(10, (num1 * num2) - 5); 
+                        answer = (num1 * num2) - num3;
+                        problem = `A baker made ${num1} batches of ${item}. There were ${num2} ${item} in each batch. They sold ${num3} ${item}. How many ${item} are left?`;
+                    } else if (selectedScenario === 'divide_add') {
+                        const divisor = getRandomInt(2, 7);
+                        const quotient = getRandomInt(5, 12);
+                        const dividend = divisor * quotient;
+                        const num3 = getRandomInt(10, 30);
+                        answer = (dividend / divisor) + num3;
+                        problem = `${name1} had ${dividend} ${item} and shared them equally among ${divisor} friends. ${name2} then gave ${name1} ${num3} more ${item}. How many ${item} does ${name1} have now?`;
+                    } else { // divide_subtract
+                        const divisor = getRandomInt(3, 8);
+                        const quotient = getRandomInt(10, 20);
+                        const dividend = divisor * quotient;
+                        const num3 = getRandomInt(5, quotient - 2); 
+                        answer = (dividend / divisor) - num3;
+                        problem = `A total of ${dividend} students are going on a trip in ${divisor} buses. Each bus has the same number of students. At one stop, ${num3} students get off one of the buses. How many students are left on that bus?`;
+                    }
+                    break;
+                }
+                default:
+                    problem = "No problem type selected.";
+                    answer = "N/A";
+            }
+            return { problem, answer };
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const iepGoal = document.getElementById('iepGoal').value;
+            const numProblems = parseInt(document.getElementById('numProblems').value, 10);
+
+            if (isNaN(numProblems) || numProblems < 1 || numProblems > 50) {
+                showMessage("Please enter a number between 1 and 50.");
+                return;
+            }
+
+            // Clear previous results
+            problemsContainer.innerHTML = '';
+            answersList.innerHTML = '';
+            answersContainer.classList.add('hidden');
+            toggleAnswersBtn.textContent = 'Show Answers';
+
+            let problemsHTML = '<h2 class="text-2xl font-bold text-gray-700 mb-4">Generated Problems</h2>';
+            let answersHTML = '<ol class="list-decimal list-inside space-y-2">';
+            
+            // Add student name and date fields for printing
+            problemsHTML += `
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex flex-col sm:flex-row justify-between">
+                        <div class="flex items-baseline mb-4 sm:mb-0">
+                            <label class="font-semibold mr-2">Name:</label>
+                            <div class="border-b-2 border-gray-400 flex-grow w-48"></div>
+                        </div>
+                         <div class="flex items-baseline">
+                            <label class="font-semibold mr-2">Date:</label>
+                            <div class="border-b-2 border-gray-400 flex-grow w-32"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (iepGoal === 'multiply_two_by_one' || iepGoal === 'multiply_two_by_two') {
+                problemsHTML += '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">';
+                const answers = [];
+                for (let i = 0; i < numProblems; i++) {
+                    const num1 = getRandomInt(10, 99);
+                    const num2 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(2, 9) : getRandomInt(10, 99);
+                    const answer = num1 * num2;
+                    answers.push(answer);
+                    problemsHTML += `
+                        <div class="vertical-problem-card bg-white p-4 rounded-lg shadow-md flex justify-center items-center">
+                            <div class="text-right text-3xl font-mono leading-tight">
+                                <p>${num1}</p>
+                                <p><span class="text-2xl mr-1">&times;</span>${num2}</p>
+                                <div class="border-t-2 border-black mt-2"></div>
+                                <div class="h-12"></div> <!-- Spacer for answer -->
+                            </div>
+                        </div>
+                    `;
+                }
+                problemsHTML += '</div>';
+                answers.forEach((ans) => {
+                    answersHTML += `<li class="text-lg">${ans}</li>`;
+                });
+
+            } else {
+                 for (let i = 0; i < numProblems; i++) {
+                    const { problem, answer } = generateProblem(iepGoal);
+                    // Updated problem card with lots of space for work
+                    problemsHTML += `
+                        <div class="problem-card bg-white p-8 rounded-lg shadow-md mb-6">
+                            <p class="text-lg mb-40"><strong>${i + 1}.</strong> ${problem}</p>
+                        </div>
+                    `;
+                    answersHTML += `<li class="text-lg">${answer}</li>`;
+                }
+            }
+            
+            answersHTML += '</ol>';
+            problemsContainer.innerHTML = problemsHTML;
+            answersList.innerHTML = answersHTML;
+            actionButtons.classList.remove('hidden');
+        });
+
+        toggleAnswersBtn.addEventListener('click', () => {
+            const isHidden = answersContainer.classList.contains('hidden');
+            if (isHidden) {
+                answersContainer.classList.remove('hidden');
+                toggleAnswersBtn.textContent = 'Hide Answers';
+            } else {
+                answersContainer.classList.add('hidden');
+                toggleAnswersBtn.textContent = 'Show Answers';
+            }
+        });
+    </script>
+
+</body>
+</html>
+
