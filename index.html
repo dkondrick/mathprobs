@@ -90,7 +90,7 @@
                     <select id="iepGoal" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="multiply_two_by_one">2-Digit by 1-Digit Multiplication</option>
                         <option value="multiply_two_by_two">2-Digit by 2-Digit Multiplication</option>
-                        <option value="identify_op_two_by_one">2-Digit by 1-Digit Word Problem (Identify Operation)</option>
+                        <option value="identify_operation_mixed">Identify Operation (Mixed Problems)</option>
                         <option value="one_step_mixed">1-Step Word Problems (Mixed Ops)</option>
                         <option value="two_step_mixed">2-Step Word Problems (Mixed Ops)</option>
                     </select>
@@ -114,27 +114,9 @@
             <!-- Problems will be injected here -->
             <div id="problems-container"></div>
 
-            <!-- Answer Key Section -->
-            <div id="answers-container" class="hidden">
-                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Answer Key</h2>
-                    <button onclick="window.print()" class="flex items-center bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition duration-150 no-print">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16">
-                          <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm5 8H6a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
-                          <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                        </svg>
-                        Print
-                    </button>
-                </div>
-                <div id="answers-list" class="bg-white p-6 rounded-lg shadow-md"></div>
-            </div>
+            <!-- Answer Key Section (REMOVED) -->
 
-            <!-- Action Buttons -->
-            <div id="action-buttons" class="text-center mt-8 hidden no-print">
-                <button id="toggleAnswersBtn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
-                    Show Answers
-                </button>
-            </div>
+            <!-- Action Buttons (REMOVED) -->
         </div>
          <!-- Message Box -->
         <div id="message-box" class="hidden fixed top-5 right-5 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-xl no-print" role="alert">
@@ -146,10 +128,7 @@
     <script>
         const generateBtn = document.getElementById('generateBtn');
         const problemsContainer = document.getElementById('problems-container');
-        const answersContainer = document.getElementById('answers-container');
-        const answersList = document.getElementById('answers-list');
-        const actionButtons = document.getElementById('action-buttons');
-        const toggleAnswersBtn = document.getElementById('toggleAnswersBtn');
+        // Removed answer key elements
         const messageBox = document.getElementById('message-box');
         const messageText = document.getElementById('message-text');
 
@@ -189,59 +168,67 @@
             const action = getRandomElement(actions);
 
             switch (goal) {
-                case 'identify_op_two_by_one': {
-                    const num1 = getRandomInt(10, 99); // 2-digit
-                    const num2 = getRandomInt(2, 9);   // 1-digit
+                case 'identify_operation_mixed': {
+                    const operations = ['add', 'subtract', 'multiply', 'divide'];
+                    const selectedOp = getRandomElement(operations);
                     const item = getRandomElement(items);
                     const name1 = getRandomElement(names);
-                    
-                    const templates = [
-                        {
-                            problem: `${name1} has ${num2} boxes of ${item}. Each box contains ${num1} ${item}. How many ${item} are there in total?`,
-                            keywords: "each, total"
-                        },
-                        {
-                            problem: `A farmer planted ${num2} rows of ${item}. There are ${num1} ${item} in each row. What is the total number of ${item} planted?`,
-                            keywords: "rows of, each row, total"
-                        },
-                        {
-                            problem: `${name1} is baking ${item}. The recipe calls for ${num1} grams of sugar for one batch. If ${name1} wants to make ${num2} batches, how many grams of sugar are needed in all?`,
-                            keywords: "for one, batches, in all"
-                        },
-                        {
-                            problem: `The school bought ${num2} new packs of ${item}. If there are ${num1} ${item} in every pack, how many new ${item} did the school get?`,
-                            keywords: "packs of, in every pack, how many"
-                        },
-                        {
-                            problem: `${name1} runs ${num1} miles every day. How many miles will ${name1} run in ${num2} days?`,
-                            keywords: "every day, in X days"
-                        },
-                        {
-                            problem: `Tickets for a school play cost $${num1} each. If ${num2} students buy a ticket, how much money did the school collect in total?`,
-                            keywords: "each, total"
-                        },
-                        {
-                            problem: `${name1} reads ${num1} pages of a book each night. How many pages will ${name1} read in ${num2} nights?`,
-                            keywords: "each night, in X nights"
-                        },
-                        {
-                            problem: `A car can travel ${num1} miles on one gallon of gas. How far can the car travel if it has ${num2} gallons of gas?`,
-                            keywords: "on one, how far"
-                        },
-                        {
-                            problem: `A building set comes with ${num1} blocks. ${name1} buys ${num2} sets. How many blocks will ${name1} have in all?`,
-                            keywords: "sets, in all"
-                        },
-                        {
-                            problem: `${name1} collects ${item}. Each binder page holds ${num1} ${item}. If ${name1} has ${num2} full pages, how many ${item} are in the binders?`,
-                            keywords: "each, holds, full pages, how many"
-                        }
-                    ];
+                    let name2 = getRandomElement(names.filter(n => n !== name1));
 
-                    const selectedTemplate = getRandomElement(templates);
-                    
-                    problem = selectedTemplate.problem;
-                    answer = { operation: "Multiplication", keywords: selectedTemplate.keywords }; // Returning an object
+                    if (selectedOp === 'add') {
+                        const num1 = getRandomInt(10, 99);
+                        const num2 = getRandomInt(10, 99);
+                        const templates = [
+                            { problem: `${name1} has ${num1} ${item}. ${name2} gives ${name1} ${num2} more. How many ${item} do they have altogether?`, keywords: "more, altogether" },
+                            { problem: `The library has ${num1} books on one shelf and ${num2} books on another. What is the total number of books?`, keywords: "and, total" },
+                            { problem: `${name1} found ${num1} seashells on Monday and ${num2} seashells on Tuesday. How many seashells did ${name1} find in all?`, keywords: "and, in all" },
+                            { problem: `A store sold ${num1} ${item} in the morning and ${num2} ${item} in the afternoon. How many ${item} did they sell in total?`, keywords: "and, in total" },
+                            { problem: `${num1} students from one class and ${num2} students from another class are going on a field trip. How many students are going altogether?`, keywords: "and, altogether" }
+                        ];
+                        const selectedTemplate = getRandomElement(templates);
+                        problem = selectedTemplate.problem;
+                        answer = { operation: "Addition", keywords: selectedTemplate.keywords };
+                    } else if (selectedOp === 'subtract') {
+                        const num1 = getRandomInt(20, 99);
+                        const num2 = getRandomInt(10, num1 - 5); // Ensure num2 is smaller
+                        const templates = [
+                            { problem: `${name1} had ${num1} ${item}. They gave ${num2} to ${name2}. How many ${item} does ${name1} have left?`, keywords: "gave, left" },
+                            { problem: `There were ${num1} birds in a tree. ${num2} birds flew away. How many birds are remaining?`, keywords: "flew away, remaining" },
+                            { problem: `${name1} has ${num1} dollars. They spend ${num2} dollars on a toy. How much money does ${name1} have now?`, keywords: "spend, how much... now" },
+                            { problem: `A bus has ${num1} people on it. At the first stop, ${num2} people get off. How many people are still on the bus?`, keywords: "get off, still on" },
+                            { problem: `The school has ${num1} ${item}. ${num2} of them were used by the students. How many ${item} are left?`, keywords: "used, left" }
+                        ];
+                        const selectedTemplate = getRandomElement(templates);
+                        problem = selectedTemplate.problem;
+                        answer = { operation: "Subtraction", keywords: selectedTemplate.keywords };
+                    } else if (selectedOp === 'multiply') {
+                        const num1 = getRandomInt(10, 99); // 2-digit
+                        const num2 = getRandomInt(2, 9);   // 1-digit
+                        const templates = [
+                            { problem: `${name1} has ${num2} boxes of ${item}. Each box contains ${num1} ${item}. How many ${item} are there in total?`, keywords: "each, total" },
+                            { problem: `A farmer planted ${num2} rows of ${item}. There are ${num1} ${item} in each row. What is the total number of ${item} planted?`, keywords: "rows of, each row, total" },
+                            { problem: `${name1} is baking ${item}. The recipe calls for ${num1} grams of sugar for one batch. If ${name1} wants to make ${num2} batches, how many grams of sugar are needed in all?`, keywords: "for one, batches, in all" },
+                            { problem: `The school bought ${num2} new packs of ${item}. If there are ${num1} ${item} in every pack, how many new ${item} did the school get?`, keywords: "packs of, in every pack, how many" },
+                            { problem: `${nameThis} runs ${num1} miles every day. How many miles will ${name1} run in ${num2} days?`, keywords: "every day, in X days" }
+                        ];
+                        const selectedTemplate = getRandomElement(templates);
+                        problem = selectedTemplate.problem;
+                        answer = { operation: "Multiplication", keywords: selectedTemplate.keywords };
+                    } else { // divide
+                        const divisor = getRandomInt(2, 9);
+                        const quotient = getRandomInt(5, 20);
+                        const dividend = divisor * quotient; // Ensure a clean division
+                        const templates = [
+                            { problem: `${name1} has ${dividend} ${item} to share equally among ${divisor} friends. How many ${item} will each friend get?`, keywords: "share equally, each" },
+                            { problem: `A team of ${divisor} players scored ${dividend} points in total. If they each scored the same amount, how many points did each player score?`, keywords: "each, same amount" },
+                            { problem: `There are ${dividend} ${item} that need to be put into ${divisor} boxes. How many ${item} will be in each box?`, keywords: "in each" },
+                            { problem: `${name1} is making teams. There are ${dividend} students and they need to make ${divisor} teams. How many students will be on each team?`, keywords: "each team" },
+                            { problem: `A baker has ${dividend} ${item} to arrange in ${divisor} equal rows. How many ${item} will be in each row?`, keywords: "equal rows, in each row" }
+                        ];
+                        const selectedTemplate = getRandomElement(templates);
+                        problem = selectedTemplate.problem;
+                        answer = { operation: "Division", keywords: selectedTemplate.keywords };
+                    }
                     break;
                 }
                 case 'one_step_mixed': {
@@ -330,12 +317,10 @@
 
             // Clear previous results
             problemsContainer.innerHTML = '';
-            answersList.innerHTML = '';
-            answersContainer.classList.add('hidden');
-            toggleAnswersBtn.textContent = 'Show Answers';
+            // Removed answer key clearing lines
 
             let problemsHTML = '<h2 class="text-2xl font-bold text-gray-700 mb-4">Generated Problems</h2>';
-            let answersHTML = '<ol class="list-decimal list-inside space-y-2">';
+            // Removed answersHTML
             let plainTextAnswers = []; // For QR Code
             
             // Add student name and date fields for printing
@@ -356,12 +341,12 @@
 
             if (iepGoal === 'multiply_two_by_one' || iepGoal === 'multiply_two_by_two') {
                 problemsHTML += '<div class="print-grid flex flex-wrap gap-6 justify-center">';
-                const answers = [];
+                // const answers = []; // No longer needed
                 for (let i = 0; i < numProblems; i++) {
                     const num1 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(10, 99) : getRandomInt(10, 99);
                     const num2 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(2, 9) : getRandomInt(10, 99);
                     const answer = num1 * num2;
-                    answers.push(answer);
+                    // answers.push(answer); // No longer needed
                     plainTextAnswers.push(`${i + 1}. ${answer}`);
                     
                     let spacerClass = (iepGoal === 'multiply_two_by_one') ? 'spacer' : 'spacer-double';
@@ -378,9 +363,7 @@
                     `;
                 }
                 problemsHTML += '</div>';
-                answers.forEach((ans, index) => {
-                    answersHTML += `<li class="text-lg">${ans}</li>`;
-                });
+                // Removed answers.forEach loop
 
             } else {
                  // Logic for word problems
@@ -388,7 +371,7 @@
                     const { problem, answer } = generateProblem(iepGoal);
                     
                     let problemContent = "";
-                    if (iepGoal === 'identify_op_two_by_one') {
+                    if (iepGoal === 'identify_operation_mixed') {
                         // Special format for identifying operations
                         problemContent = `
                             <p class="text-lg mb-6"><strong>${i + 1}.</strong> ${problem}</p>
@@ -398,14 +381,14 @@
                             </div>
                         `;
                         // Format answer for this specific goal
-                        answersHTML += `<li class="text-lg"><strong>Operation:</strong> ${answer.operation} <br> <span class="text-sm text-gray-600">(Keywords: ${answer.keywords})</span></li>`;
+                        // answersHTML += ... // Removed
                         plainTextAnswers.push(`${i + 1}. Operation: ${answer.operation} (Keywords: ${answer.keywords})`);
                     } else {
                         // Standard format for all other word problems
                         problemContent = `
                             <p class="text-lg mb-40"><strong>${i + 1}.</strong> ${problem}</p>
                         `;
-                        answersHTML += `<li class="text-lg">${answer}</li>`;
+                        // answersHTML += ... // Removed
                         plainTextAnswers.push(`${i + 1}. ${answer}`);
                     }
 
@@ -425,10 +408,10 @@
                 </div>
             `;
             
-            answersHTML += '</ol>';
+            // answersHTML += '</ol>'; // Removed
             problemsContainer.innerHTML = problemsHTML;
-            answersList.innerHTML = answersHTML;
-            actionButtons.classList.remove('hidden');
+            // answersList.innerHTML = answersHTML; // Removed
+            // actionButtons.classList.remove('hidden'); // Removed
 
             // Generate QR Code
             const answerString = plainTextAnswers.join('\n');
@@ -440,19 +423,9 @@
             }
         });
 
-        toggleAnswersBtn.addEventListener('click', () => {
-            const isHidden = answersContainer.classList.contains('hidden');
-            if (isHidden) {
-                answersContainer.classList.remove('hidden');
-                toggleAnswersBtn.textContent = 'Hide Answers';
-            } else {
-                answersContainer.classList.add('hidden');
-                toggleAnswersBtn.textContent = 'Show Answers';
-            }
-        });
+        // Removed toggleAnswersBtn.addEventListener('click')
     </script>
 
 </body>
 </html>
-
 
