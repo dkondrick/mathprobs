@@ -6,6 +6,8 @@
     <title>IEP Word Problem Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add QR Code library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -13,6 +15,29 @@
         .problem-card {
             page-break-inside: avoid;
         }
+        .vertical-problem-card {
+            font-family: 'Courier New', Courier, monospace;
+            page-break-inside: avoid;
+            text-align: right;
+            width: 120px; /* Fixed width for better grid alignment */
+        }
+        .vertical-problem-card .problem-line {
+            padding-right: 10px;
+        }
+        .vertical-problem-card .op-line {
+            display: flex;
+            justify-content: space-between;
+            padding-right: 10px;
+            border-bottom: 2px solid black;
+            margin-bottom: 4px;
+        }
+         .vertical-problem-card .spacer {
+            height: 1.5em; /* Space for first partial product */
+         }
+         .vertical-problem-card .spacer-double {
+            height: 3em; /* Space for two partial products */
+         }
+
         @media print {
             body {
                 background-color: white;
@@ -31,6 +56,19 @@
              .container {
                 max-width: 100%;
                 padding: 0;
+            }
+            /* Ensure grid items don't break across pages if possible */
+            .print-grid {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .vertical-problem-card {
+                margin: 10px;
+            }
+            .qr-code-container {
+                page-break-before: always; /* Put QR code on its own page at the end */
+                text-align: right;
+                padding-top: 2rem;
             }
         }
     </style>
@@ -52,6 +90,7 @@
                     <select id="iepGoal" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="multiply_two_by_one">2-Digit by 1-Digit Multiplication</option>
                         <option value="multiply_two_by_two">2-Digit by 2-Digit Multiplication</option>
+                        <option value="identify_op_two_by_one">2-Digit by 1-Digit Word Problem (Identify Operation)</option>
                         <option value="one_step_mixed">1-Step Word Problems (Mixed Ops)</option>
                         <option value="two_step_mixed">2-Step Word Problems (Mixed Ops)</option>
                     </select>
@@ -116,8 +155,8 @@
 
         // Data for generating varied problems
         const names = ["Alex", "Ben", "Maria", "Sam", "Leo", "Mia", "Zoe", "Tom", "Ava", "Chloe"];
-        const items = ["cookies", "apples", "pencils", "stickers", "marbles", "books", "crayons", "toys", "cupcakes", "stickers"];
-        const places = ["park", "store", "library", "school", "beach", "zoo"];
+        const items = ["cookies", "apples", "pencils", "stickers", "marbles", "books", "crayons", "toys", "cupcakes", "tickets"];
+        const places = ["park", "store", "library", "school", "beach", "zoo", "auditorium", "game"];
         const actions = [
             { past: "found", present: "finds" },
             { past: "saw", present: "sees" },
@@ -143,13 +182,68 @@
         // --- Problem Generation Logic ---
         function generateProblem(goal) {
             let problem = "";
-            let answer = 0;
+            let answer = 0; // Default to number, will be object for new goal
             const name1 = getRandomElement(names);
             let name2 = getRandomElement(names.filter(n => n !== name1));
             const item = getRandomElement(items);
             const action = getRandomElement(actions);
 
             switch (goal) {
+                case 'identify_op_two_by_one': {
+                    const num1 = getRandomInt(10, 99); // 2-digit
+                    const num2 = getRandomInt(2, 9);   // 1-digit
+                    const item = getRandomElement(items);
+                    const name1 = getRandomElement(names);
+                    
+                    const templates = [
+                        {
+                            problem: `${name1} has ${num2} boxes of ${item}. Each box contains ${num1} ${item}. How many ${item} are there in total?`,
+                            keywords: "each, total"
+                        },
+                        {
+                            problem: `A farmer planted ${num2} rows of ${item}. There are ${num1} ${item} in each row. What is the total number of ${item} planted?`,
+                            keywords: "rows of, each row, total"
+                        },
+                        {
+                            problem: `${name1} is baking ${item}. The recipe calls for ${num1} grams of sugar for one batch. If ${name1} wants to make ${num2} batches, how many grams of sugar are needed in all?`,
+                            keywords: "for one, batches, in all"
+                        },
+                        {
+                            problem: `The school bought ${num2} new packs of ${item}. If there are ${num1} ${item} in every pack, how many new ${item} did the school get?`,
+                            keywords: "packs of, in every pack, how many"
+                        },
+                        {
+                            problem: `${name1} runs ${num1} miles every day. How many miles will ${name1} run in ${num2} days?`,
+                            keywords: "every day, in X days"
+                        },
+                        {
+                            problem: `Tickets for a school play cost $${num1} each. If ${num2} students buy a ticket, how much money did the school collect in total?`,
+                            keywords: "each, total"
+                        },
+                        {
+                            problem: `${name1} reads ${num1} pages of a book each night. How many pages will ${name1} read in ${num2} nights?`,
+                            keywords: "each night, in X nights"
+                        },
+                        {
+                            problem: `A car can travel ${num1} miles on one gallon of gas. How far can the car travel if it has ${num2} gallons of gas?`,
+                            keywords: "on one, how far"
+                        },
+                        {
+                            problem: `A building set comes with ${num1} blocks. ${name1} buys ${num2} sets. How many blocks will ${name1} have in all?`,
+                            keywords: "sets, in all"
+                        },
+                        {
+                            problem: `${name1} collects ${item}. Each binder page holds ${num1} ${item}. If ${name1} has ${num2} full pages, how many ${item} are in the binders?`,
+                            keywords: "each, holds, full pages, how many"
+                        }
+                    ];
+
+                    const selectedTemplate = getRandomElement(templates);
+                    
+                    problem = selectedTemplate.problem;
+                    answer = { operation: "Multiplication", keywords: selectedTemplate.keywords }; // Returning an object
+                    break;
+                }
                 case 'one_step_mixed': {
                     const operations = ['add', 'subtract', 'multiply', 'divide'];
                     const selectedOp = getRandomElement(operations);
@@ -242,17 +336,18 @@
 
             let problemsHTML = '<h2 class="text-2xl font-bold text-gray-700 mb-4">Generated Problems</h2>';
             let answersHTML = '<ol class="list-decimal list-inside space-y-2">';
+            let plainTextAnswers = []; // For QR Code
             
             // Add student name and date fields for printing
             problemsHTML += `
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <div class="flex flex-col sm:flex-row justify-between">
                         <div class="flex items-baseline mb-4 sm:mb-0">
-                            <label class="font-semibold mr-2">Name:</label>
+                            <label class="font-semibold mr-2 shrink-0">Name:</label>
                             <div class="border-b-2 border-gray-400 flex-grow w-48"></div>
                         </div>
                          <div class="flex items-baseline">
-                            <label class="font-semibold mr-2">Date:</label>
+                            <label class="font-semibold mr-2 shrink-0">Date:</label>
                             <div class="border-b-2 border-gray-400 flex-grow w-32"></div>
                         </div>
                     </div>
@@ -260,46 +355,89 @@
             `;
 
             if (iepGoal === 'multiply_two_by_one' || iepGoal === 'multiply_two_by_two') {
-                problemsHTML += '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">';
+                problemsHTML += '<div class="print-grid flex flex-wrap gap-6 justify-center">';
                 const answers = [];
                 for (let i = 0; i < numProblems; i++) {
-                    const num1 = getRandomInt(10, 99);
+                    const num1 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(10, 99) : getRandomInt(10, 99);
                     const num2 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(2, 9) : getRandomInt(10, 99);
                     const answer = num1 * num2;
                     answers.push(answer);
+                    plainTextAnswers.push(`${i + 1}. ${answer}`);
+                    
+                    let spacerClass = (iepGoal === 'multiply_two_by_one') ? 'spacer' : 'spacer-double';
+
                     problemsHTML += `
-                        <div class="vertical-problem-card bg-white p-4 rounded-lg shadow-md flex justify-center items-center">
-                            <div class="text-right text-3xl font-mono leading-tight">
-                                <p>${num1}</p>
-                                <p><span class="text-2xl mr-1">&times;</span>${num2}</p>
-                                <div class="border-t-2 border-black mt-2"></div>
-                                <div class="h-12"></div> <!-- Spacer for answer -->
+                        <div class="vertical-problem-card bg-white p-4 rounded-lg shadow-md text-3xl">
+                            <div class="problem-line">${num1}</div>
+                            <div class="op-line">
+                                <span class="text-2xl">&times;</span>
+                                <span>${num2}</span>
                             </div>
+                            <div class="${spacerClass}">&nbsp;</div>
                         </div>
                     `;
                 }
                 problemsHTML += '</div>';
-                answers.forEach((ans) => {
+                answers.forEach((ans, index) => {
                     answersHTML += `<li class="text-lg">${ans}</li>`;
                 });
 
             } else {
+                 // Logic for word problems
                  for (let i = 0; i < numProblems; i++) {
                     const { problem, answer } = generateProblem(iepGoal);
-                    // Updated problem card with lots of space for work
+                    
+                    let problemContent = "";
+                    if (iepGoal === 'identify_op_two_by_one') {
+                        // Special format for identifying operations
+                        problemContent = `
+                            <p class="text-lg mb-6"><strong>${i + 1}.</strong> ${problem}</p>
+                            <div class="flex items-baseline mt-4">
+                                <label class="font-semibold mr-2 shrink-0">Operation:</label>
+                                <div class="border-b-2 border-gray-400 flex-grow w-48"></div>
+                            </div>
+                        `;
+                        // Format answer for this specific goal
+                        answersHTML += `<li class="text-lg"><strong>Operation:</strong> ${answer.operation} <br> <span class="text-sm text-gray-600">(Keywords: ${answer.keywords})</span></li>`;
+                        plainTextAnswers.push(`${i + 1}. Operation: ${answer.operation} (Keywords: ${answer.keywords})`);
+                    } else {
+                        // Standard format for all other word problems
+                        problemContent = `
+                            <p class="text-lg mb-40"><strong>${i + 1}.</strong> ${problem}</p>
+                        `;
+                        answersHTML += `<li class="text-lg">${answer}</li>`;
+                        plainTextAnswers.push(`${i + 1}. ${answer}`);
+                    }
+
                     problemsHTML += `
                         <div class="problem-card bg-white p-8 rounded-lg shadow-md mb-6">
-                            <p class="text-lg mb-40"><strong>${i + 1}.</strong> ${problem}</p>
+                            ${problemContent}
                         </div>
                     `;
-                    answersHTML += `<li class="text-lg">${answer}</li>`;
                 }
             }
+
+            // Add container for QR code at the end of the problems
+            problemsHTML += `
+                <div class="qr-code-container">
+                    <p class="text-sm text-gray-500 text-right mb-2">Scan for Answer Key</p>
+                    <canvas id="answer-qr-code" class="ml-auto"></canvas>
+                </div>
+            `;
             
             answersHTML += '</ol>';
             problemsContainer.innerHTML = problemsHTML;
             answersList.innerHTML = answersHTML;
             actionButtons.classList.remove('hidden');
+
+            // Generate QR Code
+            const answerString = plainTextAnswers.join('\n');
+            const canvas = document.getElementById('answer-qr-code');
+            if (canvas && answerString) {
+                QRCode.toCanvas(canvas, answerString, { width: 100, margin: 2 }, function (error) {
+                    if (error) console.error(error);
+                });
+            }
         });
 
         toggleAnswersBtn.addEventListener('click', () => {
@@ -316,4 +454,5 @@
 
 </body>
 </html>
+
 
