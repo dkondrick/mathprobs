@@ -15,28 +15,72 @@
         .problem-card {
             page-break-inside: avoid;
         }
-        .vertical-problem-card {
+
+        /* NEW STYLES FOR MULTIPLICATION GRID */
+        .mult-grid-card {
             font-family: 'Courier New', Courier, monospace;
             page-break-inside: avoid;
-            text-align: right;
-            width: 120px; /* Fixed width for better grid alignment */
-        }
-        .vertical-problem-card .problem-line {
-            padding-right: 10px;
-        }
-        .vertical-problem-card .op-line {
+            width: 180px; /* Wider to accommodate boxes */
+            font-size: 1.5rem; /* 24px */
+            line-height: 2rem; /* 32px */
             display: flex;
-            justify-content: space-between;
-            padding-right: 10px;
-            border-bottom: 2px solid black;
-            margin-bottom: 4px;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-bottom: 2rem;
         }
-         .vertical-problem-card .spacer {
-            height: 1.5em; /* Space for first partial product */
-         }
-         .vertical-problem-card .spacer-double {
-            height: 3em; /* Space for two partial products */
-         }
+        .digit-box {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #9ca3af; /* gray-400 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+        }
+        .regroup-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #cbd5e1; /* gray-300 */
+            font-size: 0.875rem; /* 14px */
+            line-height: 1.25rem; /* 20px */
+            margin-bottom: -2px; /* Pulls it closer */
+            /* border-bottom: none; <-- Removed this line */
+            opacity: 0.6;
+            margin-right: 5px; /* Aligns with digit boxes */
+        }
+        .empty-box {
+            width: 32px;
+            height: 32px;
+        }
+        .op-box {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .digit-row {
+            display: flex;
+            flex-direction: row;
+        }
+        .line-2x1 {
+            border-bottom: 2px solid black;
+            width: 96px; /* 3 boxes wide */
+            margin: 4px 0;
+        }
+        .line-2x2 {
+            border-bottom: 2px solid black;
+            width: 128px; /* 4 boxes wide */
+            margin: 4px 0;
+        }
+         .line-2x2-partial {
+            border-bottom: 2px solid black;
+            width: 128px; /* 4 boxes wide */
+            margin: 4px 0;
+            margin-top: 8px;
+        }
+
+        /* END NEW STYLES */
 
         @media print {
             body {
@@ -46,29 +90,37 @@
             .no-print {
                 display: none;
             }
-            .problem-card, .vertical-problem-card {
+            .problem-card, .mult-grid-card {
                 box-shadow: none;
                 border: 1px solid #e2e8f0; /* light gray border */
-            }
-            #answers-container {
-                page-break-before: always; /* Start answers on a new page */
             }
              .container {
                 max-width: 100%;
                 padding: 0;
             }
-            /* Ensure grid items don't break across pages if possible */
             .print-grid {
                 display: flex;
                 flex-wrap: wrap;
+                justify-content: center;
             }
-            .vertical-problem-card {
-                margin: 10px;
+            .mult-grid-card {
+                margin: 20px;
             }
             .qr-code-container {
                 page-break-before: always; /* Put QR code on its own page at the end */
                 text-align: right;
                 padding-top: 2rem;
+            }
+            /* Hide border on empty boxes when printing */
+            .empty-box {
+                border: none;
+            }
+            .regroup-box {
+                border: 1px solid #cbd5e1;
+                border-bottom: none;
+            }
+            .digit-box {
+                 border: 1px solid #9ca3af;
             }
         }
     </style>
@@ -209,7 +261,7 @@
                             { problem: `A farmer planted ${num2} rows of ${item}. There are ${num1} ${item} in each row. What is the total number of ${item} planted?`, keywords: "rows of, each row, total" },
                             { problem: `${name1} is baking ${item}. The recipe calls for ${num1} grams of sugar for one batch. If ${name1} wants to make ${num2} batches, how many grams of sugar are needed in all?`, keywords: "for one, batches, in all" },
                             { problem: `The school bought ${num2} new packs of ${item}. If there are ${num1} ${item} in every pack, how many new ${item} did the school get?`, keywords: "packs of, in every pack, how many" },
-                            { problem: `${nameThis} runs ${num1} miles every day. How many miles will ${name1} run in ${num2} days?`, keywords: "every day, in X days" }
+                            { problem: `${name1} runs ${num1} miles every day. How many miles will ${name1} run in ${num2} days?`, keywords: "every day, in X days" }
                         ];
                         const selectedTemplate = getRandomElement(templates);
                         problem = selectedTemplate.problem;
@@ -301,9 +353,101 @@
                 }
                 default:
                     problem = "No problem type selected.";
-                    answer = "N/A";
+                    answer = "NA";
             }
             return { problem, answer };
+        }
+
+        // --- NEW: Helper function to create multiplication grids ---
+        function createMultGrid(num1, num2) {
+            const num1Digits = String(num1).split('');
+            const num2Digits = String(num2).split('');
+            let gridHTML = '';
+
+            if (num2Digits.length === 1) {
+                // 2-Digit by 1-Digit
+                gridHTML = `
+                    <div class="mult-grid-card bg-white p-4 rounded-lg shadow-md">
+                        <!-- Regrouping Row -->
+                        <div class="digit-row">
+                            <div class="regroup-box"></div>
+                            <div class="empty-box"></div>
+                        </div>
+                        <!-- Top Number Row -->
+                        <div class="digit-row">
+                            <div class="empty-box"></div>
+                            <div class="digit-box">${num1Digits[0]}</div>
+                            <div class="digit-box">${num1Digits[1]}</div>
+                        </div>
+                        <!-- Bottom Number Row -->
+                        <div class="digit-row">
+                            <div class="op-box">&times;</div>
+                            <div class="empty-box"></div>
+                            <div class="digit-box">${num2Digits[0]}</div>
+                        </div>
+                        <!-- Line -->
+                        <div class="line-2x1"></div>
+                        <!-- Answer Row -->
+                        <div class="digit-row">
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 2-Digit by 2-Digit
+                gridHTML = `
+                    <div class="mult-grid-card bg-white p-4 rounded-lg shadow-md">
+                        <!-- Regrouping Row -->
+                        <div class="digit-row">
+                            <div class="empty-box"></div>
+                            <div class="regroup-box"></div>
+                            <div class="regroup-box"></div>
+                        </div>
+                        <!-- Top Number Row -->
+                        <div class="digit-row">
+                            <div class="empty-box"></div>
+                            <div class="empty-box"></div>
+                            <div class="digit-box">${num1Digits[0]}</div>
+                            <div class="digit-box">${num1Digits[1]}</div>
+                        </div>
+                        <!-- Bottom Number Row -->
+                        <div class="digit-row">
+                            <div class="op-box">&times;</div>
+                            <div class="empty-box"></div>
+                            <div class="digit-box">${num2Digits[0]}</div>
+                            <div class="digit-box">${num2Digits[1]}</div>
+                        </div>
+                        <!-- Line 1 -->
+                        <div class="line-2x2"></div>
+                        <!-- Partial Product 1 -->
+                        <div class="digit-row">
+                            <div class="empty-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                        </div>
+                         <!-- Partial Product 2 -->
+                        <div class="digit-row">
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box">0</div>
+                        </div>
+                        <!-- Line 2 -->
+                        <div class="line-2x2-partial"></div>
+                        <!-- Answer Row -->
+                        <div class="digit-row">
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                            <div class="digit-box"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            return gridHTML;
         }
 
         generateBtn.addEventListener('click', () => {
@@ -317,14 +461,10 @@
 
             // Clear previous results
             problemsContainer.innerHTML = '';
-            // Removed answer key clearing lines
-
-            let problemsHTML = '<h2 class="text-2xl font-bold text-gray-700 mb-4">Generated Problems</h2>';
-            // Removed answersHTML
             let plainTextAnswers = []; // For QR Code
             
             // Add student name and date fields for printing
-            problemsHTML += `
+            let problemsHTML = `
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <div class="flex flex-col sm:flex-row justify-between">
                         <div class="flex items-baseline mb-4 sm:mb-0">
@@ -337,33 +477,22 @@
                         </div>
                     </div>
                 </div>
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Generated Problems</h2>
             `;
+
 
             if (iepGoal === 'multiply_two_by_one' || iepGoal === 'multiply_two_by_two') {
                 problemsHTML += '<div class="print-grid flex flex-wrap gap-6 justify-center">';
-                // const answers = []; // No longer needed
                 for (let i = 0; i < numProblems; i++) {
                     const num1 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(10, 99) : getRandomInt(10, 99);
                     const num2 = (iepGoal === 'multiply_two_by_one') ? getRandomInt(2, 9) : getRandomInt(10, 99);
                     const answer = num1 * num2;
-                    // answers.push(answer); // No longer needed
                     plainTextAnswers.push(`${i + 1}. ${answer}`);
                     
-                    let spacerClass = (iepGoal === 'multiply_two_by_one') ? 'spacer' : 'spacer-double';
-
-                    problemsHTML += `
-                        <div class="vertical-problem-card bg-white p-4 rounded-lg shadow-md text-3xl">
-                            <div class="problem-line">${num1}</div>
-                            <div class="op-line">
-                                <span class="text-2xl">&times;</span>
-                                <span>${num2}</span>
-                            </div>
-                            <div class="${spacerClass}">&nbsp;</div>
-                        </div>
-                    `;
+                    // Use the NEW grid generator function
+                    problemsHTML += createMultGrid(num1, num2);
                 }
                 problemsHTML += '</div>';
-                // Removed answers.forEach loop
 
             } else {
                  // Logic for word problems
@@ -380,15 +509,12 @@
                                 <div class="border-b-2 border-gray-400 flex-grow w-48"></div>
                             </div>
                         `;
-                        // Format answer for this specific goal
-                        // answersHTML += ... // Removed
                         plainTextAnswers.push(`${i + 1}. Operation: ${answer.operation} (Keywords: ${answer.keywords})`);
                     } else {
                         // Standard format for all other word problems
                         problemContent = `
                             <p class="text-lg mb-40"><strong>${i + 1}.</strong> ${problem}</p>
                         `;
-                        // answersHTML += ... // Removed
                         plainTextAnswers.push(`${i + 1}. ${answer}`);
                     }
 
@@ -408,10 +534,7 @@
                 </div>
             `;
             
-            // answersHTML += '</ol>'; // Removed
             problemsContainer.innerHTML = problemsHTML;
-            // answersList.innerHTML = answersHTML; // Removed
-            // actionButtons.classList.remove('hidden'); // Removed
 
             // Generate QR Code
             const answerString = plainTextAnswers.join('\n');
@@ -423,9 +546,10 @@
             }
         });
 
-        // Removed toggleAnswersBtn.addEventListener('click')
     </script>
 
 </body>
 </html>
+
+
 
