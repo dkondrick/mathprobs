@@ -107,12 +107,18 @@
                 justify-content: center;
             }
             .mult-grid-card {
-                margin: 20px;
+                /* Scale down the grid problems to fit more on a page */
+                transform: scale(0.75);
+                transform-origin: top center;
+                margin: 10px; /* Tighter margin for print */
+                box-shadow: none;
+                border: none; /* Remove outer border, keep inner boxes */
             }
             .qr-code-container {
-                page-break-before: always; /* Put QR code on its own page at the end */
-                text-align: right;
-                padding-top: 2rem;
+                page-break-before: auto; /* Keep on the same page */
+                text-align: center; /* Center at the bottom */
+                padding-top: 1rem; /* Reduced padding */
+                page-break-inside: avoid; /* Don't split the QR code */
             }
             /* Hide border on empty boxes when printing */
             .empty-box {
@@ -532,8 +538,8 @@
             // Add container for QR code at the end of the problems
             problemsHTML += `
                 <div class="qr-code-container">
-                    <p class="text-sm text-gray-500 text-right mb-2">Scan for Answer Key</p>
-                    <canvas id="answer-qr-code" class="ml-auto"></canvas>
+                    <p class="text-sm text-gray-500 text-center mb-2">Scan for Answer Key</p>
+                    <canvas id="answer-qr-code" class="mx-auto"></canvas>
                 </div>
             `;
             
