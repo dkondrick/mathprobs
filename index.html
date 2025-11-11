@@ -59,6 +59,9 @@
             justify-content: center;
             align-items: center;
         }
+        .circle-shape {
+            border-radius: 50%;
+        }
         .digit-row {
             display: flex;
             flex-direction: row;
@@ -370,7 +373,7 @@
                     <div class="mult-grid-card bg-white p-4 rounded-lg shadow-md">
                         <!-- Regrouping Row -->
                         <div class="digit-row">
-                            <div class="regroup-box"></div>
+                            <div class="regroup-box circle-shape"></div>
                             <div class="empty-box"></div>
                         </div>
                         <!-- Top Number Row -->
@@ -391,7 +394,7 @@
                         <div class="digit-row">
                             <div class="digit-box"></div>
                             <div class="digit-box"></div>
-                            <div class="digit-box"></div>
+                            <div class="digit-box circle-shape"></div>
                         </div>
                     </div>
                 `;
@@ -550,6 +553,3 @@
 
 </body>
 </html>
-
-
-
